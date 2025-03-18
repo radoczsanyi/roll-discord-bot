@@ -22,9 +22,9 @@ function roulette(betAmount, betChoice) {
   const wheel = [
     { color: "red", multiplier: 2 },
     { color: "black", multiplier: 2 },
-    { color: "bait", multiplier: 7 }, // Bait (randomly could be red or black)
-    { color: "bait", multiplier: 7 }, // Bait (randomly could be red or black)
-    { color: "green", multiplier: 14 }, // Green (highest multiplier)
+    { color: "bait", multiplier: 7 },
+    { color: "bait", multiplier: 7 }, 
+    { color: "green", multiplier: 14 }, 
   ];
 
   const randomIndex = Math.floor(Math.random() * wheel.length);

@@ -2,7 +2,6 @@ import "dotenv/config";
 import { getRPSChoices } from "./game.js";
 import { capitalize, InstallGlobalCommands } from "./utils.js";
 
-// Get the game choices from game.js
 function createCommandChoices() {
   const choices = getRPSChoices();
   const commandChoices = [];
@@ -19,7 +18,7 @@ function createCommandChoices() {
 
 const MEGAMILLION_COMMAND = {
   name: "mega-millions",
-  description: "See the winning numbers on Mega Millions",
+  description: "Checks the winning numbers on Mega Millions",
   type: 1,
   integration_types: [0, 1],
   contexts: [0, 1, 2],
@@ -33,10 +32,10 @@ const ROLL_COMMAND = {
   contexts: [0, 1, 2],
   options: [
     {
-      type: 3, // String type for the color selection
+      type: 3, 
       name: "color",
       description: "Choose a color to bet on",
-      required: true, // Set as required
+      required: true, 
       choices: [
         { name: "Red", value: "red" },
         { name: "Black", value: "black" },
@@ -45,18 +44,18 @@ const ROLL_COMMAND = {
       ],
     },
     {
-      type: 4, // Integer type for the amount (but you can handle decimal values)
+      type: 4,
       name: "amount",
       description: "The amount of your bet",
-      required: true, // Set as required
-      min_value: 0.01, // Start from 0.01
+      required: true, 
+      min_value: 0.01, 
     },
   ],
 };
 
 const OTOSLOTTO_COMMAND = {
   name: "otos-lotto",
-  description: "See the winning numbers on Ötös lottó",
+  description: "Checks the winning numbers on Ötös lottó",
   type: 1,
   integration_types: [0, 1],
   contexts: [0, 1, 2],
@@ -64,7 +63,7 @@ const OTOSLOTTO_COMMAND = {
 
 const REGISTER_COMMAND = {
   name: "register",
-  description: "Create an account",
+  description: " Create an account with a starting balance of $200",
   type: 1,
   integration_types: [0, 1],
   contexts: [0, 1, 2],
@@ -78,7 +77,6 @@ const BALANCE_COMMAND = {
   contexts: [0, 1, 2],
 };
 
-// Command containing options
 const CHALLENGE_COMMAND = {
   name: "challenge",
   description: "Challenge to a match of rock paper scissors",

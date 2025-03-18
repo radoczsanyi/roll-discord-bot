@@ -2,7 +2,7 @@ import { db } from "../app.js";
 
 function getBalance(username) {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT amount FROM bank WHERE name = ?"; // Use parameterized query with ?
+    const sql = "SELECT amount FROM bank WHERE name = ?";
 
     db.get(sql, [username], (err, row) => {
       if (err) {

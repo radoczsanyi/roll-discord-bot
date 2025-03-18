@@ -18,11 +18,8 @@ import { register } from "./commands/register.js";
 import { getBalance } from "./commands/account.js";
 import { toMarkup } from "./helpers/balanceHelper.js";
 
-// Create an express app
 const app = express();
-// Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
-// To keep track of our active games
 const activeGames = {};
 
 let db = new sqlite3.Database("bank.db", (err) => {
@@ -70,7 +67,7 @@ app.post(
     if (type === InteractionType.APPLICATION_COMMAND) {
       const { name } = data;
 
-      // MEGA-MILLIONS
+      // Mega-Millions
       //
       if (name === "mega-millions") {
         let message;
@@ -188,8 +185,6 @@ app.post(
           message = "An error occured. Try again later.";
         }
 
-        // Send a message into the channel where command was triggered from
-        //
         return res.send({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
