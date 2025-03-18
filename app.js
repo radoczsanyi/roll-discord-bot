@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import sqlite3 from "sqlite3"; 
 import {
   ButtonStyleTypes,
   InteractionResponseFlags,
@@ -12,6 +13,10 @@ import { getRandomEmoji, DiscordRequest } from "./utils.js";
 import { getShuffledOptions, getResult } from "./game.js";
 import { getLatestMegaMillionNumbers } from "./commands/mega-millions.js";
 import { getOtosLottoNumbers } from "./commands/otos-lotto.js";
+import { roll } from "./commands/roll.js";
+import { register } from "./commands/register.js";
+import { getBalance } from "./commands/account.js";
+import { toMarkup } from "./helpers/balanceHelper.js";
 
 // Create an express app
 const app = express();
@@ -19,6 +24,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 // To keep track of our active games
 const activeGames = {};
+
+let db = new sqlite3.Database("bank.db", (err) => {
+  if (err) {
+    console.error("Error opening database:", err);
+  } else {
+    console.log("Database opened successfully");
+  }
+});
+
+// Create table (bank.db)
+//
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS bank (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      amount REAL NOT NULL
+    )
+  `);
+});
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -45,13 +70,17 @@ app.post(
     if (type === InteractionType.APPLICATION_COMMAND) {
       const { name } = data;
 
-      // MEGA-MILLIONS 
+      // MEGA-MILLIONS
       //
       if (name === "mega-millions") {
-        const message = await getLatestMegaMillionNumbers();
+        let message;
 
-        // Send a message into the channel where command was triggered from
-        //
+        try {
+          message = await getLatestMegaMillionNumbers();
+        } catch (err) {
+          message = "An error occured. Try again later.";
+        }
+
         return res.send({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
@@ -60,10 +89,104 @@ app.post(
         });
       }
 
-      // OTOS-LOTTO
+      // balance
+      //
+      if (name === "balance") {
+        let message = "";
+
+        try {
+          message = toMarkup(await getBalance(req.body.member.user.id));
+        } catch (err) {
+          message = err;
+        }
+
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: message,
+          },
+        });
+      }
+
+      // register
+      //
+      if (name === "register") {
+        let message = "";
+
+        try {
+          const startBalance = 200;
+
+          await register(req.body.member.user.id, startBalance);
+          message = `Hello, balance: $${startBalance}`;
+        } catch (err) {
+          if (
+            err.message.includes(
+              "SQLITE_CONSTRAINT: UNIQUE constraint failed: bank.name"
+            )
+          ) {
+            const balance = await getBalance(req.body.member.user.id);
+
+            if (balance < 200) {
+              message = "csövessss tessek $200";
+            } else {
+              message = `meg van penzed te zsido, balance: $${balance}`;
+            }
+          }
+        }
+
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: message,
+          },
+        });
+      }
+
+      // roll
+      //
+      //  - color
+      //  - amount
+      //
+      if (name === "roll") {
+        const color = data.options.find(
+          (option) => option.name === "color"
+        )?.value;
+        const amount = data.options.find(
+          (option) => option.name === "amount"
+        )?.value;
+
+        if (!color || !amount) {
+          return res
+            .status(400)
+            .json({ error: "Color and amount are required" });
+        }
+
+        let message;
+
+        try {
+          message = await roll(req.body.member.user.id, color, amount);
+        } catch (err) {
+          message = err.message;
+        }
+
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: message,
+          },
+        });
+      }
+
+      // ötös-lottó
       //
       if (name === "otos-lotto") {
-        const message = await getOtosLottoNumbers();
+        let message;
+
+        try {
+          message = await getOtosLottoNumbers();
+        } catch (err) {
+          message = "An error occured. Try again later.";
+        }
 
         // Send a message into the channel where command was triggered from
         //
@@ -89,3 +212,15 @@ app.post(
 app.listen(PORT, () => {
   console.log("Listening on port", PORT);
 });
+
+process.on("exit", () => {
+  db.close((err) => {
+    if (err) {
+      console.error("Error closing database:", err);
+    } else {
+      console.log("Database closed");
+    }
+  });
+});
+
+export { db };
